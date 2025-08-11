@@ -1,6 +1,4 @@
-Here's a GitHub Markdown README file for your project with redacted personal information:
 
-```
 # PA Court Case Search Tool
 
 A Flask web application that processes personal information files and searches Pennsylvania court records for matching cases.
