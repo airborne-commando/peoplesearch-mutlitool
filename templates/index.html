@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Tool Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .container {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 400px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .pending {
+            color: #f39c12;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .case-search {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #eaf2f8;
+            border-radius: 5px;
+        }
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            width: 200px;
+        }
+        .download-link {
+            color: #2980b9;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+        .download-link:hover {
+            text-decoration: underline;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .action-cell {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Multi-Tool Application</h1>
+    
+    <div class="container">
+        <h2>Upload File</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Select file to upload:</label>
+                <input type="file" id="file" name="file" required>
+            </div>
+            <button type="submit">Process File</button>
+        </form>
+        
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+    </div>
+
+    {% if results %}
+    <div class="container">
+        <h2>Extracted Information</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Full Name</th>
+                    <th>Current ZIP</th>
+                    <th>Current County</th>
+                    <th>Past Addresses</th>
+                    <th>Date of Birth</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for person in results %}
+                <tr data-index="{{ loop.index0 }}">
+                    <td>{{ person.full_name }}</td>
+                    <td>{{ person.current_zip }}</td>
+                    <td>{{ person.current_county }}</td>
+                    <td>
+                        {% if person.past_addresses %}
+                        <ul>
+                            {% for addr in person.past_addresses %}
+                            <li>{{ addr.address }} ({{ addr.zip }}, {{ addr.county }})</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        None
+                        {% endif %}
+                    </td>
+                    <td class="dob-cell">{{ person.get('dob', '') }}</td>
+                    <td class="status-cell">
+                        {% if person.get('cases_downloaded') %}
+                        <span class="success">Downloaded</span>
+                        {% else %}
+                        <span class="pending">Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if show_case_search %}
+    <div class="case-search">
+        <h2>Pennsylvania Court Case Search</h2>
+        <form method="POST" action="{{ url_for('search_cases') }}">
+            <div class="form-group">
+                <label for="docket_type">Filter by Docket Type (optional):</label>
+                <select id="docket_type" name="docket_type">
+                    <option value="">All Types</option>
+                    <option value="1">Civil</option>
+                    <option value="2">Criminal</option>
+                    <option value="3">Landlord/Tenant</option>
+                    <option value="4">Miscellaneous</option>
+                    <option value="5">Non-Traffic</option>
+                    <option value="6">Summary Appeal</option>
+                    <option value="7">Traffic</option>
+                </select>
+            </div>
+            <button type="submit">Search All Cases</button>
+            <p><small>Note: This may take several minutes depending on the number of names.</small></p>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if case_results %}
+    <div class="container">
+        <h2>Case Search Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>County</th>
+                    <th>Docket Type</th>
+                    <th>Cases Found</th>
+                    <th>Results</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in case_results %}
+                <tr>
+                    <td>{{ result.name }}</td>
+                    <td>{{ result.county }}</td>
+                    <td>{{ result.docket_type }}</td>
+                    <td>{{ result.case_count }}</td>
+                    <td>
+                        {% if result.filename %}
+                            <a href="{{ url_for('download_case_results', filename=result.filename) }}" download class="download-link">
+    Download CSV
+</a>
+                        {% else %}
+                            No cases found
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if case_results|length > 1 %}
+        <p class="success">Completed searching for {{ case_results|length }} individuals.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- County Selection Modal -->
+    <div id="countyModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Download Cases for <span id="modalPersonName"></span></h3>
+            <form id="countyForm">
+                <input type="hidden" id="personIndex" name="person_index">
+                <div class="form-group">
+                    <label for="countySelect">County:</label>
+                    <select id="countySelect" name="county" required>
+                        {% for county in counties %}
+                        <option value="{{ county }}">{{ county }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="modalDocketType">Docket Type (optional):</label>
+                    <select id="modalDocketType" name="docket_type">
+                        <option value="">All Types</option>
+                        <option value="1">Civil</option>
+                        <option value="2">Criminal</option>
+                        <option value="3">Landlord/Tenant</option>
+                        <option value="4">Miscellaneous</option>
+                        <option value="5">Non-Traffic</option>
+                        <option value="6">Summary Appeal</option>
+                        <option value="7">Traffic</option>
+                    </select>
+                </div>
+                <button type="submit">Download Cases</button>
+            </form>
+            <div id="downloadStatus" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('countyModal');
+        const closeBtn = document.querySelector('.close');
+        const downloadStatus = document.getElementById('downloadStatus');
+        
+        // Show modal when download button is clicked
+    document.querySelectorAll('.download-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const index = this.dataset.index;
+            const name = this.dataset.name;
+            const county = this.dataset.county;  // Get the county from data attribute
+            
+            document.getElementById('personIndex').value = index;
+            document.getElementById('modalPersonName').textContent = name;
+            
+            // Set the selected county in the dropdown
+            const countySelect = document.getElementById('countySelect');
+            for (let i = 0; i < countySelect.options.length; i++) {
+                if (countySelect.options[i].value === county) {
+                    countySelect.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            modal.style.display = 'block';
+        });
+    });
+        
+        // Close modal
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+            downloadStatus.innerHTML = '';
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+                downloadStatus.innerHTML = '';
+            }
+        });
+        
+        // Handle form submission
+        document.getElementById('countyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            downloadStatus.innerHTML = '<p>Downloading cases... Please wait.</p>';
+            
+            const formData = new FormData(this);
+            fetch('/download_cases', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    downloadStatus.innerHTML = `
+                        <p class="success">Cases downloaded successfully!</p>
+                        ${data.dob ? `<p>Date of Birth: ${data.dob}</p>` : ''}
+                        <a href="/static/${data.filename}" download class="download-link">Download CSV</a>
+                    `;
+                    // Update the table row
+                    const row = document.querySelector(`tr[data-index="${formData.get('person_index')}"]`);
+                    if (row) {
+                        if (data.dob) {
+                            const dobCell = row.querySelector('.dob-cell');
+                            if (dobCell) dobCell.textContent = data.dob;
+                        }
+                        const statusCell = row.querySelector('.status-cell');
+                        if (statusCell) statusCell.innerHTML = '<span class="success">Downloaded</span>';
+                        
+                        const actionCell = row.querySelector('.action-cell');
+                        if (actionCell) {
+                            actionCell.innerHTML = `
+                                <button class="download-btn" 
+                                        data-index="${formData.get('person_index')}" 
+                                        data-name="${document.getElementById('modalPersonName').textContent}">
+                                    Download Cases
+                                </button>
+                                <a href="/static/${data.filename}" download class="download-link">
+                                    Download CSV
+                                </a>
+                            `;
+                            // Reattach event listener to the new button
+                            actionCell.querySelector('.download-btn').addEventListener('click', function() {
+                                const index = this.dataset.index;
+                                const name = this.dataset.name;
+                                document.getElementById('personIndex').value = index;
+                                document.getElementById('modalPersonName').textContent = name;
+                                modal.style.display = 'block';
+                            });
+                        }
+                    }
+                } else {
+                    downloadStatus.innerHTML = `<p class="error">${data.message || 'Failed to download cases'}</p>`;
+                }
+            })
+            .catch(error => {
+                downloadStatus.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            });
+        });
+    });
+    </script>
+</body>
+</html>
