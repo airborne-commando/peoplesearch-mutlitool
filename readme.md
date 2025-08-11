@@ -64,7 +64,7 @@ Past Addresses:
 [Past Street Address 2] [Past City], [Past State] [Past ZIP]
 ```
 
-Use https://github.com/airborne-commando/zabasearch-auto
+Read the readme [here](https://github.com/airborne-commando/peoplesearch-mutlitool/blob/main/ZabaSearch-auto.md)
 
 ## Configuration
 
