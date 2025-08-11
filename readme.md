@@ -95,14 +95,3 @@ DEBUG=True
 ├── static/                   # Static files
 └── README.md
 ```
-
-## Legal Disclaimer
-
-This tool is intended for legitimate use by authorized personnel only. Users are responsible for ensuring compliance with all applicable laws including:
-
-- Computer Fraud and Abuse Act (CFAA)
-- Pennsylvania Right-to-Know Law
-- Fair Credit Reporting Act (FCRA)
-- Other relevant privacy laws
-
-Always obtain proper authorization before conducting searches.
