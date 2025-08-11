@@ -66,21 +66,15 @@ Past Addresses:
 
 Read the readme [here](https://github.com/airborne-commando/peoplesearch-mutlitool/blob/main/ZabaSearch-auto.md)
 
-## Configuration
-
-Create a `.env` file for environment variables:
-```
-FLASK_SECRET_KEY=your_secret_key_here
-DEBUG=True
-```
 
 ## Dependencies
 
-- Python 3.8+
 - Flask
-- Selenium
+- selenium
 - pandas
 - webdriver-manager
+- python-dotenv
+- bs4
 
 ## File Structure
 
